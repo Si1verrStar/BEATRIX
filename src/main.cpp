@@ -8,6 +8,8 @@
 // BEATRIX firmware - beta version 1.0
 // Bath opEn humAnoid for Teaching and Research in robotICS(X)
 
+// Modified by Aya Woolf (ltw31)
+
 #include <Arduino.h>
 #include <AccelStepper.h>
 #include <MultiStepper.h>
@@ -30,7 +32,7 @@
 // maximum number of paramater for each command
 #define MAX_NUM_PARAMETERS 20
 // maximum motor speed
-#define MAX_SPEED 200
+#define MAX_SPEED 200   
 // maximum motor acceleration
 #define MAX_ACCEL 200
 
@@ -64,6 +66,11 @@ boolean inPositionX = false;
 boolean inPositionY = false;   
 boolean inPositionZ = false;
 
+bool commandList(char *cmdReceived);
+void replyAcknowledge(bool cmdStatus);
+bool executeCommand(char cmdReceived[][MAX_SIZE_COMMAND]);
+void sendACK();
+void sendNACK();
 
 void setup()
 {
