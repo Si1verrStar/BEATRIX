@@ -159,6 +159,8 @@ void loop()
 bool executeCommand(char cmdReceived[][MAX_SIZE_COMMAND])
 {
     int step_size_int[20];
+    int step_size_x[20];
+    int step_size_y[20];
     int abs_step_size_int[20];
     int speed_int[20];
     int xMotorPos = 0;
@@ -565,6 +567,147 @@ bool executeCommand(char cmdReceived[][MAX_SIZE_COMMAND])
         else       
             return false;
     }
+    /* Move to relative position, inputs are posX, posY, speed*/
+    else if( !strcmp(cmdReceived[0], "@MOVTORPOS"))
+    {
+        if( calibrationStatus == 1 )
+        {
+            if( strcmp(cmdReceived[1]," ") && strcmp(cmdReceived[2]," ") && strcmp(cmdReceived[3]," ") && strcmp(cmdReceived[4]," "))
+            {
+
+            inPositionX = false;
+            inPositionY = false;   
+            inPositionZ = false;
+
+            step_size_x[0] = atoi(cmdReceived[1]); // Steps for the x direction for all motors
+            step_size_y[0] = atoi(cmdReceived[2]); // Steps for the y direction for the 1st motor
+            step_size_y[1] = int(atoi(cmdReceived[2]) * (2.0/3.0)); // Steps for the y direction for the 2nd motor
+            step_size_y[2] = int(atoi(cmdReceived[2]) * (1.0/3.0)); // Steps for the y direction for the 3rd motor
+
+            step_size_int[0] = step_size_x[0] + step_size_y[0];
+            step_size_int[1] = step_size_x[0] - step_size_y[1];
+            step_size_int[2] = step_size_x[0] - step_size_y[2];
+
+            int step_size_total = step_size_int[0] + step_size_int[1] + step_size_int[2];
+
+            speed_int[0] = atoi(cmdReceived[3]) * (step_size_int[0]/step_size_total);
+            speed_int[1] = atoi(cmdReceived[3]) * (step_size_int[1]/step_size_total);
+            speed_int[2] = atoi(cmdReceived[3]) * (step_size_int[2]/step_size_total);
+               
+            if( speed_int[0] > MAX_SPEED )
+                speed_int[0] = MAX_SPEED;
+
+            if( speed_int[1] > MAX_SPEED )
+                speed_int[1] = MAX_SPEED;
+
+            if( speed_int[2] > MAX_SPEED )
+                speed_int[2] = MAX_SPEED;
+
+            stepperX.move(step_size_int[0]);
+            stepperY.move(step_size_int[1]);
+            stepperZ.move(step_size_int[2]);
+        
+            do
+            {          
+                if( stepperX.distanceToGo() != 0 )
+                    stepperX.run();
+                else
+                {
+                    stepperX.stop();
+                    stepperX.runToPosition();
+                    inPositionX = true;
+                }
+        
+                if( stepperY.distanceToGo() != 0 )
+                    stepperY.run();
+                else
+                {
+                    stepperY.stop();
+                    stepperY.runToPosition();
+                    inPositionY = true;
+                }
+    
+                if( stepperZ.distanceToGo() != 0 )
+                    stepperZ.run();
+                else
+                {
+                    stepperZ.stop();
+                    stepperZ.runToPosition();
+                    inPositionZ = true;
+                }
+
+            }while( ( inPositionX != true ) || ( inPositionY != true ) || ( inPositionZ != true ) );
+
+            delay(1000);
+
+            stepperX.setCurrentPosition(stepperX.currentPosition());
+            stepperY.setCurrentPosition(stepperY.currentPosition());
+            stepperZ.setCurrentPosition(stepperZ.currentPosition());
+
+            return true;
+        }
+        else
+            return false;       
+        }
+        else       
+            return false;
+    }
+    /* Move to absolute position, inputs are posX, posY, speed*/
+    else if( !strcmp(cmdReceived[0], "@MOVTOAPOS"))
+    {
+        if( calibrationStatus == 1 )
+        {
+            if( strcmp(cmdReceived[1]," ") && strcmp(cmdReceived[2]," ") && strcmp(cmdReceived[3]," ") && strcmp(cmdReceived[4]," "))
+            {
+
+            inPositionX = false;
+            inPositionY = false;   
+            inPositionZ = false;
+
+            step_size_x[0] = atoi(cmdReceived[1]); // Steps for the x direction for all motors
+            step_size_y[0] = atoi(cmdReceived[2]); // Steps for the y direction for the 1st motor
+            step_size_y[1] = int(atoi(cmdReceived[2]) * (2.0/3.0)); // Steps for the y direction for the 2nd motor
+            step_size_y[2] = int(atoi(cmdReceived[2]) * (1.0/3.0)); // Steps for the y direction for the 3rd motor
+
+            step_size_int[0] = step_size_x[0] + step_size_y[0];
+            step_size_int[1] = step_size_x[0] - step_size_y[1];
+            step_size_int[2] = step_size_x[0] - step_size_y[2];
+
+            int step_size_total = step_size_int[0] + step_size_int[1] + step_size_int[2];
+
+            speed_int[0] = atoi(cmdReceived[3]) * (step_size_int[0]/step_size_total);
+            speed_int[1] = atoi(cmdReceived[3]) * (step_size_int[1]/step_size_total);
+            speed_int[2] = atoi(cmdReceived[3]) * (step_size_int[2]/step_size_total);
+               
+            if( speed_int[0] > MAX_SPEED )
+                speed_int[0] = MAX_SPEED;
+
+            if( speed_int[1] > MAX_SPEED )
+                speed_int[1] = MAX_SPEED;
+
+            if( speed_int[2] > MAX_SPEED )
+                speed_int[2] = MAX_SPEED;
+
+              multiStepperPositions[0] = step_size_int[0];
+              multiStepperPositions[1] = step_size_int[1];
+              multiStepperPositions[2] = step_size_int[2];
+
+              steppers.moveTo(multiStepperPositions);
+              steppers.runSpeedToPosition();
+              delay(1000);
+
+              stepperX.setCurrentPosition(stepperX.currentPosition());
+              stepperY.setCurrentPosition(stepperY.currentPosition());
+              stepperZ.setCurrentPosition(stepperZ.currentPosition());
+    
+              return true;
+          }
+          else
+              return false;       
+        }
+        else       
+            return false;
+    }
     /* Check the status of the current command*/
     else if( !strcmp(cmdReceived[0],"@COMSTATUS\r") )
     {
@@ -625,6 +768,8 @@ bool commandList(char *cmdReceived)
                             "@MOVAZ",         // Move motor Z from home position
                             "@MOVRALL",       // Move all motors relative to their current motor positions
                             "@MOVAALL",       // Move all motors from their home positions
+                            "@MOVTORPOS",   // Move all motors to a certain position relative to their current positions. Parameters are posx, posy and speed
+                            "@MOVTOAPOS",   // Move all motors to a certain position relative to their calibrated centre positions. Parameters are posx, posy and speed
                             "@STOPALL\r",     // Stop all motor movements
                             "@GETALLPOS\r",   // Get the current positions of all motors
                             "@GETXPOS\r",     // Get the current position of motor X
@@ -633,7 +778,7 @@ bool commandList(char *cmdReceived)
                             "@COMSTATUS\r",   // TBD: Check the status of a command
                             "@ENMOTORS"       // Enable/disable motors to be actuated
                             };   
-    int ncommands = 23;
+    int ncommands = 25;
     
     // Search whether the command receive exist in the commandArray list
     for( int i = 0; i < ncommands; i++ )
