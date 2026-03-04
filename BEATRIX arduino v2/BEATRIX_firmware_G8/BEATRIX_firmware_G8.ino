@@ -38,6 +38,7 @@
 //WPFC20 custom mic output
 #define MIC1_PIN A0
 #define MIC2_PIN A1
+int NUM_SAMPLES = 200 //default sample size  
 
 // creates object for motor X
 AccelStepper stepperX(1, X_STEP_PIN, X_DIR_PIN); // (num. of motor, dir, step)
@@ -731,9 +732,13 @@ bool executeCommand(char cmdReceived[][MAX_SIZE_COMMAND])
     }
 
 //WPFC20 custom mic code
-    else if ( !strcmp(cmdReceived[0], "@GETMICS\r") )
+    else if ( !strcmp(cmdReceived[0], "@GETMICS") )
     {
-        sendMicrophoneDataRAW();
+        int sample_size = NUM_SAMPLES
+        if (cmdReceived[1] != NULL)
+            sample_size = atoi(cmdReceived[1]);
+
+        sendMicrophoneDataRAW(sample_size);
         return true;
     }
 
@@ -765,9 +770,9 @@ void sendNACK()
 }
 
 //WPFC20 custom microphone data
-void sendMicrophoneDataRAW() //raw audio signals
+void sendMicrophoneDataRAW(NUM_SAMPLES) //raw audio signals
 {
-    const int numSamples = 200;          // burst size
+    const int numSamples = NUM_SAMPLES; // burst size
     const unsigned int sampleDelay = 500;  // 4kHz (250 µs) and 8 kHz (125 µs)
 
     for(int i = 0; i < numSamples; i++)
@@ -775,10 +780,10 @@ void sendMicrophoneDataRAW() //raw audio signals
         uint16_t mic1 = analogRead(MIC1_PIN);
         uint16_t mic2 = analogRead(MIC2_PIN);
 
-        Serial.println(mic1);
-        // Serial.println(mic2);
-        // Serial.write((uint8_t*)&mic1, 2); //print binary to save data
-        // Serial.write((uint8_t*)&mic2, 2);
+        // Serial.println(mic1);
+        // Serial.println(mic2); //print in ASCII
+        Serial.write((uint8_t*)&mic1, 2); //print binary to save data
+        Serial.write((uint8_t*)&mic2, 2);
 
         delayMicroseconds(sampleDelay);
     }
@@ -855,7 +860,7 @@ bool commandList(char *cmdReceived)
                             "@GETZPOS\r",     // Get the current position of motor Z
                             "@COMSTATUS\r",   // TBD: Check the status of a command
                             "@ENMOTORS",       // Enable/disable motors to be actuated
-                            "@GETMICS\r"         //Gets the analogue mic signal from the pin
+                            "@GETMICS"         //Gets the analogue mic signal from the pin
                             };   
     int ncommands = 26;
     
