@@ -38,7 +38,7 @@
 //WPFC20 custom mic output
 #define MIC1_PIN A0
 #define MIC2_PIN A1
-int NUM_SAMPLES = 200 //default sample size  
+int NUM_SAMPLES = 200; //default sample size  
 
 // creates object for motor X
 AccelStepper stepperX(1, X_STEP_PIN, X_DIR_PIN); // (num. of motor, dir, step)
@@ -734,8 +734,8 @@ bool executeCommand(char cmdReceived[][MAX_SIZE_COMMAND])
 //WPFC20 custom mic code
     else if ( !strcmp(cmdReceived[0], "@GETMICS") )
     {
-        int sample_size = NUM_SAMPLES
-        if (cmdReceived[1] != NULL)
+        int sample_size = NUM_SAMPLES;
+        if (cmdReceived[1] != '\0')
             sample_size = atoi(cmdReceived[1]);
 
         sendMicrophoneDataRAW(sample_size);
@@ -770,9 +770,8 @@ void sendNACK()
 }
 
 //WPFC20 custom microphone data
-void sendMicrophoneDataRAW(NUM_SAMPLES) //raw audio signals
+void sendMicrophoneDataRAW(int numSamples) //raw audio signals
 {
-    const int numSamples = NUM_SAMPLES; // burst size
     const unsigned int sampleDelay = 500;  // 4kHz (250 µs) and 8 kHz (125 µs)
 
     for(int i = 0; i < numSamples; i++)

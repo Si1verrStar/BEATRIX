@@ -1,31 +1,60 @@
 %-------------------------------------------------------------------------%
 %--------------------------- BEATRIX Mic Test ----------------------------%
-%-------------------------- Author: Samer Ahmed --------------------------%
 %-------------------------------------------------------------------------%
 clear
 clc
+
 %---------------------------%
 %-- Object Initialization --%
 %---------------------------%
-% Check if the Arduino object already exists
+usb_port = '/dev/cu.usbmodem11401';
+
 if(~exist('arduinoObj','var'))
-% If exists, skip to save time. If not, create it from scratch
-arduinoObj = arduino("/dev/cu.usbmodem1301","Uno","Libraries","I2C"); % Arduino object
+    arduinoObj = arduino(usb_port,"Uno","Libraries","I2C");
 end
+
 %---------------------------%
 %--------- Mic Setup -------%
 %---------------------------%
-% Microphone setup
-mic2 = 'A0'; % 'A1' if you need to test the other microphone
+mic1 = 'A0';
+mic2 = 'A1';
+
+windowSize = 100;
+
 %---------------------------%
-%--- Real-Time Operation ---%
+%----------- Plot ----------%
+%---------------------------%
+figure
+
+subplot(2,1,1)
+h1 = plot(zeros(windowSize,1));
+title("Mic 1 (A0)")
+ylabel("Voltage (V)")
+ylim([0 2.5])
+
+subplot(2,1,2)
+h2 = plot(zeros(windowSize,1));
+title("Mic 2 (A1)")
+ylabel("Voltage (V)")
+xlabel("Sample")
+ylim([0 2.5])
+
+%---------------------------%
+%------ Real-Time Loop -----%
 %---------------------------%
 while true
-% Read voltage samples 
-samples = zeros(50, 1); %--> Recorded samples initialized to zeros
-for i = 1:50
-samples(i) = abs(readVoltage(arduinoObj,mic2)-1.25);
-end
-% Display the mean of the samples' window
-disp(mean(samples));
+
+    data1 = zeros(windowSize,1);
+    data2 = zeros(windowSize,1);
+
+    for i = 1:windowSize
+        data1(i) = readVoltage(arduinoObj,mic1);
+        data2(i) = readVoltage(arduinoObj,mic2);
+    end
+
+    set(h1,'YData',data1)
+    set(h2,'YData',data2)
+
+    drawnow
+
 end
