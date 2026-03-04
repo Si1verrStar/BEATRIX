@@ -768,15 +768,17 @@ void sendNACK()
 void sendMicrophoneDataRAW() //raw audio signals
 {
     const int numSamples = 200;          // burst size
-    const unsigned int sampleDelay = 250;  // 4kHz (250 µs) and 8 kHz (125 µs)
+    const unsigned int sampleDelay = 500;  // 4kHz (250 µs) and 8 kHz (125 µs)
 
     for(int i = 0; i < numSamples; i++)
     {
         uint16_t mic1 = analogRead(MIC1_PIN);
         uint16_t mic2 = analogRead(MIC2_PIN);
 
-        Serial.write((uint8_t*)&mic1, 2); //print binary to save data
-        Serial.write((uint8_t*)&mic2, 2);
+        Serial.println(mic1);
+        // Serial.println(mic2);
+        // Serial.write((uint8_t*)&mic1, 2); //print binary to save data
+        // Serial.write((uint8_t*)&mic2, 2);
 
         delayMicroseconds(sampleDelay);
     }
