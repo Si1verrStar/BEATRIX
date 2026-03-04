@@ -735,9 +735,9 @@ bool executeCommand(char cmdReceived[][MAX_SIZE_COMMAND])
     else if ( !strcmp(cmdReceived[0], "@GETMICS") )
     {
         int sample_size = NUM_SAMPLES;
-        if (cmdReceived[1] != '\0')
-            sample_size = atoi(cmdReceived[1]);
-
+        if (cmdReceived[1] != '\0') //if no parameters set then deafult is 200
+            sample_size = atoi(cmdReceived[1]); 
+        delay(5); 
         sendMicrophoneDataRAW(sample_size);
         return true;
     }
@@ -780,9 +780,9 @@ void sendMicrophoneDataRAW(int numSamples) //raw audio signals
         uint16_t mic2 = analogRead(MIC2_PIN);
 
         // Serial.println(mic1);
-        // Serial.println(mic2); //print in ASCII
-        Serial.write((uint8_t*)&mic1, 2); //print binary to save data
-        Serial.write((uint8_t*)&mic2, 2);
+        Serial.println(mic2); //print in ASCII
+        // Serial.write((uint8_t*)&mic1, 2); //print binary to save data
+        // Serial.write((uint8_t*)&mic2, 2);
 
         delayMicroseconds(sampleDelay);
     }
