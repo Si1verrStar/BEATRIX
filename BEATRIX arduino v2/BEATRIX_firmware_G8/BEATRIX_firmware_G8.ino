@@ -8,7 +8,7 @@
 // BEATRIX firmware - beta version 1.0
 // Bath opEn humAnoid for Teaching and Research in robotICS(X)
 
-// Modified by Aya Woolf (ltw31)
+// Modified by Aya Woolf (ltw31) and Will Crook (WPFC20)
 
 #include <AccelStepper.h>
 #include <MultiStepper.h>
@@ -34,6 +34,11 @@
 #define MAX_SPEED 200   
 // maximum motor acceleration
 #define MAX_ACCEL 200
+
+//WPFC20 custom mic output
+#define MIC1_PIN A0
+#define MIC2_PIN A1
+int NUM_SAMPLES = 200; //default sample size  
 
 // creates object for motor X
 AccelStepper stepperX(1, X_STEP_PIN, X_DIR_PIN); // (num. of motor, dir, step)
@@ -96,13 +101,17 @@ void setup()
     steppers.addStepper(stepperZ);
 
     // set baudrate for communication with Arduino board
-    Serial.begin(9600);
+    Serial.begin(230400);
     // configures the enable_pin as output
     pinMode(ENABLE_PIN, OUTPUT);
     // initialise enable_pin as HIGH to disable the motors
     // HIGH: disable robot motors
     // LOW: enable robot motors
     digitalWrite(ENABLE_PIN, HIGH);
+
+    //WPFC20 mic output command
+    pinMode(MIC1_PIN, INPUT);
+    pinMode(MIC2_PIN, INPUT);
 }
 
 
@@ -721,6 +730,18 @@ bool executeCommand(char cmdReceived[][MAX_SIZE_COMMAND])
         else
             return false;
     }
+
+//WPFC20 custom mic code
+    else if ( !strcmp(cmdReceived[0], "@GETMICS") )
+    {
+        int sample_size = NUM_SAMPLES;
+        if (cmdReceived[1] != '\0')
+            sample_size = atoi(cmdReceived[1]);
+
+        sendMicrophoneDataRAW(sample_size);
+        return true;
+    }
+
     else
         return false;
 }
@@ -748,6 +769,68 @@ void sendNACK()
     Serial.print("NACK\n");
 }
 
+//WPFC20 custom microphone data
+void sendMicrophoneDataRAW(int numSamples) //raw audio signals
+{
+    const unsigned int sampleDelay = 500;  // 4kHz (250 µs) and 8 kHz (125 µs)
+
+    for(int i = 0; i < numSamples; i++)
+    {
+        uint16_t mic1 = analogRead(MIC1_PIN);
+        uint16_t mic2 = analogRead(MIC2_PIN);
+
+        // Serial.println(mic1);
+        // Serial.println(mic2); //print in ASCII
+        Serial.write((uint8_t*)&mic1, 2); //print binary to save data
+        Serial.write((uint8_t*)&mic2, 2);
+
+        delayMicroseconds(sampleDelay);
+    }
+}
+
+//WPFC20 custom microphone data
+void sendMicrophoneDataMAV() //compute MAV to save serial bandwidth
+{
+     const int numSamples = 200;
+
+    long sum1 = 0;
+    long sum2 = 0;
+
+    int buffer1[numSamples];
+    int buffer2[numSamples];
+
+    // First pass: collect samples and compute mean
+    for(int i = 0; i < numSamples; i++)
+    {
+        buffer1[i] = analogRead(MIC1_PIN);
+        buffer2[i] = analogRead(MIC2_PIN);
+
+        sum1 += buffer1[i];
+        sum2 += buffer2[i];
+
+        delayMicroseconds(250);  // ~8 kHz
+    }
+
+    int offset1 = sum1 / numSamples;
+    int offset2 = sum2 / numSamples;
+
+    // Second pass: compute MAV
+    long mavSum1 = 0;
+    long mavSum2 = 0;
+
+    for(int i = 0; i < numSamples; i++)
+    {
+        mavSum1 += abs(buffer1[i] - offset1);
+        mavSum2 += abs(buffer2[i] - offset2);
+    }
+
+    int mav1 = mavSum1 / numSamples;
+    int mav2 = mavSum2 / numSamples;
+
+    Serial.print(mav1);
+    Serial.print(" ");
+    Serial.println(mav2);
+}
 /* Check the command received */
 bool commandList(char *cmdReceived)
 {
@@ -775,9 +858,10 @@ bool commandList(char *cmdReceived)
                             "@GETYPOS\r",     // Get the current position of motor Y
                             "@GETZPOS\r",     // Get the current position of motor Z
                             "@COMSTATUS\r",   // TBD: Check the status of a command
-                            "@ENMOTORS"       // Enable/disable motors to be actuated
+                            "@ENMOTORS",       // Enable/disable motors to be actuated
+                            "@GETMICS"         //Gets the analogue mic signal from the pin
                             };   
-    int ncommands = 25;
+    int ncommands = 26;
     
     // Search whether the command receive exist in the commandArray list
     for( int i = 0; i < ncommands; i++ )
