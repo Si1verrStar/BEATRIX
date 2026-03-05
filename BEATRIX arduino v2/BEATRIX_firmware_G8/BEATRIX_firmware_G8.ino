@@ -772,17 +772,17 @@ void sendNACK()
 //WPFC20 custom microphone data
 void sendMicrophoneDataRAW(int numSamples) //raw audio signals
 {
-    const unsigned int sampleDelay = 500;  // 4kHz (250 µs) and 8 kHz (125 µs)
+    const unsigned int sampleDelay = 500;  // 2kHz (500µs) 4kHz (250 µs) and 8 kHz (125 µs)
 
     for(int i = 0; i < numSamples; i++)
     {
-        uint16_t mic1 = analogRead(MIC1_PIN);
+        uint16_t mic1 = analogRead(MIC1_PIN); //values from 0-1024 so 16 bit
         uint16_t mic2 = analogRead(MIC2_PIN);
 
-        // Serial.println(mic1);
+        // Serial.println(mic1); //broken mic
         Serial.println(mic2); //print in ASCII
         // Serial.write((uint8_t*)&mic1, 2); //print binary to save data
-        // Serial.write((uint8_t*)&mic2, 2);
+        // Serial.write((uint8_t*)&mic2, 2); //serial.write() expects bytes so two bytes per number
 
         delayMicroseconds(sampleDelay);
     }
