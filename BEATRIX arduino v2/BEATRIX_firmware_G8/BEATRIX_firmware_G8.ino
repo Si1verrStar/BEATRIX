@@ -31,9 +31,9 @@
 // maximum number of paramater for each command
 #define MAX_NUM_PARAMETERS 20
 // maximum motor speed
-#define MAX_SPEED 200   
+#define MAX_SPEED 800   
 // maximum motor acceleration
-#define MAX_ACCEL 200
+#define MAX_ACCEL 800
 
 //WPFC20 custom mic output
 #define MIC1_PIN A0

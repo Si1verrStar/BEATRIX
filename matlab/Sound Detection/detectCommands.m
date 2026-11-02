@@ -1,4 +1,4 @@
-function label = detectCommands(options) %WPFC20 modification to allow us to see the label
+function label = detectCommands(options) %WPFC20 modification to return the label
 
 arguments
     options.SampleRate
